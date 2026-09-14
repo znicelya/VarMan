@@ -2,7 +2,8 @@ name: Build VarMan
 
 on:
   push:
-    branches: [master]
+    branches: [main]
+    tags: ["v*"]
   pull_request:
   workflow_dispatch:
 
@@ -65,3 +66,62 @@ jobs:
           name: VarMan-${{ matrix.os }}
           path: src-tauri/target/release/bundle
           if-no-files-found: error
+
+  release:
+    name: Publish GitHub release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Verify release version
+        run: |
+          package_version="v$(node -p "require('./package.json').version")"
+          tauri_version="v$(node -p "require('./src-tauri/tauri.conf.json').version")"
+          if [[ "${GITHUB_REF_NAME}" != "${package_version}" ]]; then
+            echo "Tag ${GITHUB_REF_NAME} does not match package.json version ${package_version}" >&2
+            exit 1
+          fi
+          if [[ "${package_version}" != "${tauri_version}" ]]; then
+            echo "package.json version ${package_version} does not match tauri.conf.json version ${tauri_version}" >&2
+            exit 1
+          fi
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+
+      - name: Collect installers
+        run: |
+          mkdir -p release-files
+          find release-assets -type f \
+            \( -name "*.msi" -o -name "*.exe" -o -name "*.deb" -o -name "*.AppImage" -o -name "*.dmg" \) \
+            -exec cp {} release-files/ \;
+          installer_count="$(find release-files -type f | wc -l)"
+          if [[ "${installer_count}" -eq 0 ]]; then
+            echo "No installer artifacts found for release" >&2
+            exit 1
+          fi
+
+      - name: Create or update GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
+            gh release upload "${GITHUB_REF_NAME}" release-files/* --clobber
+          else
+            gh release create "${GITHUB_REF_NAME}" release-files/* \
+              --title "VarMan ${GITHUB_REF_NAME}" \
+              --generate-notes
+          fi

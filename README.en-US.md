@@ -296,6 +296,23 @@ macOS signing and notarization are configured through GitHub Secrets:
 - `APPLE_PASSWORD`
 - `APPLE_TEAM_ID`
 
+### Automatic releases
+
+After all three platforms build and test successfully, CI creates a GitHub Release and uploads installers:
+
+- Windows: MSI and NSIS installers
+- Linux: deb and AppImage
+- macOS: DMG
+
+Releases are triggered by `v*` tags, for example:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+The release job verifies that the tag, `package.json`, and `src-tauri/tauri.conf.json` versions match; mismatches fail the release. If a release with the same tag already exists, its assets are updated with `--clobber`, which is useful when repairing a release run.
+
 ## FAQ
 
 ### Why do some already-running programs not see updated variables?

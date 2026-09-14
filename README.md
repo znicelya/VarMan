@@ -295,6 +295,23 @@ macOS 签名与公证通过 GitHub Secrets 配置：
 - `APPLE_PASSWORD`
 - `APPLE_TEAM_ID`
 
+### 自动发布
+
+CI 在三平台构建和测试全部成功后，会自动创建 GitHub Release 并上传安装包：
+
+- Windows：MSI、NSIS 安装包
+- Linux：deb、AppImage
+- macOS：DMG
+
+发布由 `v*` 标签触发，例如：
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+Release 任务会校验标签、`package.json` 和 `src-tauri/tauri.conf.json` 中的版本一致；不一致时发布失败。若同名 Release 已存在，会使用 `--clobber` 更新其资产，方便重跑修复发布。
+
 ## 常见问题
 
 ### 为什么修改变量后某些已运行程序没有生效？
