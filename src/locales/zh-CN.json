@@ -1,0 +1,132 @@
+{
+  "common": {
+    "cancel": "取消",
+    "close": "关闭",
+    "user": "用户",
+    "system": "系统",
+    "writable": "可写",
+    "readonly": "只读"
+  },
+  "sidebar": {
+    "tagline": "环境变量管理器",
+    "scopeNavLabel": "环境变量作用域",
+    "userVariable": "用户变量",
+    "userDescription": "当前用户会话",
+    "systemVariable": "系统变量",
+    "systemDescription": "全部用户会话",
+    "platform": "平台：{{platform}}",
+    "shell": "Shell：{{shell}}",
+    "language": "语言"
+  },
+  "toolbar": {
+    "searchPlaceholder": "搜索变量名",
+    "searchLabel": "搜索变量名",
+    "refresh": "刷新",
+    "backups": "备份",
+    "add": "新增"
+  },
+  "table": {
+    "title": "变量列表",
+    "loading": "正在读取环境变量...",
+    "count_one": "共 {{count}} 个变量",
+    "count_other": "共 {{count}} 个变量",
+    "emptyTitle": "没有匹配的变量",
+    "emptyDescription": "调整搜索条件，或新增一个环境变量。",
+    "name": "变量名",
+    "value": "值",
+    "source": "来源",
+    "actions": "操作",
+    "pathCount_one": "{{count}} 个路径",
+    "pathCount_other": "{{count}} 个路径",
+    "registry": "注册表",
+    "shellConfig": "Shell 配置",
+    "editLabel": "编辑 {{name}}",
+    "deleteLabel": "删除 {{name}}"
+  },
+  "dialog": {
+    "createTitle": "新增环境变量",
+    "editTitle": "编辑环境变量",
+    "previewHint": "保存后会先生成变更预览，确认后才会写入。",
+    "nameLabel": "变量名",
+    "valueLabel": "值",
+    "nameRequired": "变量名不能为空",
+    "keepExpandable": "保留环境变量引用",
+    "expandableDescription": "Windows 下对应 REG_EXPAND_SZ；Unix 平台此选项不会影响写入格式。",
+    "expandableHint": "值包含 % 引用。如需系统展开引用，请勾选上方选项。",
+    "saveAndPreview": "保存并预览",
+    "entries": "条目",
+    "entryPlaceholder": "输入新条目",
+    "addEntry": "添加",
+    "browse": "浏览",
+    "choose": "选择",
+    "directory": "目录",
+    "file": "文件",
+    "deleteEntry": "删除 {{entry}}",
+    "entryEmpty": "暂无条目"
+  },
+  "diff": {
+    "title": "确认变更",
+    "description": "写入前会自动创建备份；请确认以下差异。",
+    "empty": "没有需要写入的变更。",
+    "apply": "确认写入",
+    "applying": "正在写入...",
+    "before": "修改前",
+    "after": "修改后",
+    "none": "（无）",
+    "badgeAdded": "新增",
+    "badgeRemoved": "删除",
+    "badgeModified": "修改"
+  },
+  "path": {
+    "title": "Path 编辑器",
+    "description": "拖拽调整顺序；红色表示目录不存在，黄色表示重复。",
+    "placeholder": "输入新路径",
+    "add": "添加",
+    "missing": "不存在",
+    "duplicate": "重复",
+    "deleteLabel": "删除 {{path}}",
+    "empty": "暂无路径条目",
+    "joined": "拼接结果",
+    "emptyJoined": "（空）",
+    "saveAndPreview": "保存并预览"
+  },
+  "permission": {
+    "nonWindowsRestart": "请使用 sudo 或 pkexec 重新启动 VarMan",
+    "title": "系统变量当前只读",
+    "windowsDesc": "当前进程没有系统环境变量写入权限。",
+    "unixDesc": "当前进程不是 root，无法修改系统环境变量。",
+    "restartAsAdmin": "以管理员身份重启"
+  },
+  "backup": {
+    "title": "备份与恢复",
+    "description": "写入前会自动备份；恢复前会展示差异预览。",
+    "emptyTitle": "暂无备份",
+    "emptyDescription": "创建备份后可以在这里恢复。",
+    "restore": "恢复",
+    "create": "创建当前作用域备份"
+  },
+  "footer": {
+    "backupPrefix": "备份：",
+    "variableCount_one": "{{count}} 个变量",
+    "variableCount_other": "{{count}} 个变量",
+    "backupCount_one": "{{count}} 个备份",
+    "backupCount_other": "{{count}} 个备份"
+  },
+  "errors": {
+    "PERMISSION_DENIED": "权限不足，请提升权限后重试",
+    "NOT_FOUND": "未找到对应的环境变量或文件",
+    "PARSE_ERROR": "配置或请求格式错误",
+    "IO_ERROR": "系统读写失败",
+    "UNSUPPORTED": "当前平台不支持该操作",
+    "UNKNOWN": "发生未知错误"
+  },
+  "store": {
+    "appliedDiff": "已应用：新增 {{added}}，修改 {{modified}}，删除 {{removed}}",
+    "noOperation": "尚未执行操作",
+    "refreshListFailed": "环境变量已写入，但刷新列表失败",
+    "applied": "环境变量已应用",
+    "backupListFailed": "备份已创建，但刷新备份列表失败",
+    "backupCreated": "备份已创建",
+    "backupRestored": "备份已恢复"
+  }
+}

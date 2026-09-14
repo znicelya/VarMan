@@ -1,0 +1,272 @@
+你是一位资深跨平台桌面应用工程师，精通 Rust、Tauri 和系统级编程。请帮我从零开发一个名为 VarMan 的系统环境变量可视化管理工具，支持 Windows、Linux、macOS 三平台。
+
+## 产品定位
+一个图形化的系统环境变量管理器，替代各平台自带的反人类编辑界面。用户可以在一个统一的列表视图中查看、新增、编辑、删除用户级和系统级环境变量，支持 Path 类变量的可视化逐条编辑，修改后提供预览和备份。
+
+## 技术栈
+- 前端：React + TypeScript + Vite
+- 后端：Rust + Tauri 2.x
+- 样式：Tailwind CSS
+- 状态管理：Zustand
+- 跨平台系统操作：Rust 侧按平台条件编译
+
+## 核心原则
+1. 所有系统级写操作必须显式提权，且操作前必须展示 diff 预览。
+2. 修改 Unix shell 配置文件前，必须自动备份到 ~/.VarMan/backups/。
+3. Windows 注册表操作必须正确处理 REG_EXPAND_SZ 类型，读取时展开，写入时保留引用。
+4. 前端不直接接触任何系统 API，全部通过 Tauri command 调用 Rust。
+5. 每一个 Tauri command 都要有完整的错误类型，前端能区分“权限不足”“文件不存在”“格式错误”等情况。
+
+## 项目结构
+请按以下结构组织代码：
+
+VarMan/
+├── src-tauri/
+│   ├── src/
+│   │   ├── main.rs
+│   │   ├── lib.rs
+│   │   ├── commands/        # Tauri command 入口
+│   │   ├── core/            # 跨平台抽象层
+│   │   │   ├── model.rs     # 统一数据模型
+│   │   │   ├── traits.rs    # EnvProvider trait
+│   │   │   └── error.rs     # 统一错误类型
+│   │   └── platform/
+│   │       ├── windows.rs
+│   │       ├── unix.rs      # Linux/macOS 共用
+│   │       └── mod.rs       # 条件编译分发
+│   └── Cargo.toml
+├── src/
+│   ├── App.tsx
+│   ├── components/
+│   ├── stores/
+│   ├── types/
+│   └── main.tsx
+└── package.json
+
+
+请在 src-tauri/src/core/model.rs 中定义统一的环境变量数据模型。
+
+要求：
+
+1. 定义 Scope 枚举，包含 User 和 System 两个变体。
+
+2. 定义 EnvVar 结构体，字段包括：
+   - name: String
+   - value: String
+   - scope: Scope
+   - is_expandable: bool   // Windows 下对应 REG_EXPAND_SZ
+   - source: Option<String> // Unix 下记录来自哪个配置文件，如 "~/.zshrc"
+
+3. 定义 PathEntry 结构体，用于 Path 类变量的逐条表示：
+   - path: String
+   - exists: bool      // 该目录是否真实存在
+   - is_duplicate: bool
+
+4. 定义 EnvDiff 结构体，用于写操作前的预览：
+   - added: Vec<EnvVar>
+   - modified: Vec<(EnvVar, EnvVar)>  // (旧值, 新值)
+   - removed: Vec<EnvVar>
+
+5. 所有结构体派生 Serialize、Deserialize、Clone、Debug。
+
+6. 为 Scope 实现 Display，输出 "用户" / "系统" 供前端直接使用。
+
+
+请在 src-tauri/src/core/traits.rs 中定义一个 trait，作为三平台适配层的统一接口。
+
+trait EnvProvider {
+    // 读取指定作用域下的所有环境变量
+    fn list_vars(&self, scope: Scope) -> Result<Vec<EnvVar>, EnvError>;
+
+    // 读取单个变量
+    fn get_var(&self, name: &str, scope: Scope) -> Result<Option<EnvVar>, EnvError>;
+
+    // 写入/更新变量，返回实际发生的变更
+    fn set_var(&self, var: &EnvVar) -> Result<EnvDiff, EnvError>;
+
+    // 删除变量
+    fn remove_var(&self, name: &str, scope: Scope) -> Result<EnvDiff, EnvError>;
+
+    // 检查当前进程是否有权限操作该系统级变量
+    fn check_permission(&self, scope: Scope) -> Result<bool, EnvError>;
+
+    // 生成 diff 预览，不实际写入
+    fn preview(&self, changes: &[Change]) -> Result<EnvDiff, EnvError>;
+
+    // 备份当前状态
+    fn backup(&self, scope: Scope) -> Result<PathBuf, EnvError>;
+}
+
+要求：
+1. Change 是一个枚举，表示 Add / Modify / Remove 三种操作意图。
+2. EnvError 要区分 PermissionDenied、NotFound、ParseError、IoError、Unsupported 五种情况。
+3. 在 mod.rs 中用 #[cfg(target_os = "...")] 分发到具体实现。
+4. trait 方法尽量保持同步，Tauri command 层再包 async。
+
+请实现 src-tauri/src/platform/windows.rs，实现 EnvProvider trait。
+
+技术要求：
+
+1. 使用 windows-registry crate 操作注册表。
+2. 用户级路径：HKEY_CURRENT_USER\Environment
+   系统级路径：HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Environment
+
+3. 读取时：
+   - 检查值类型，如果是 REG_EXPAND_SZ，读取后调用 ExpandEnvironmentStringsW 展开，并将 is_expandable 设为 true。
+   - 如果是 REG_SZ，直接读取，is_expandable 设为 false。
+
+4. 写入时：
+   - 如果原值是 REG_EXPAND_SZ，保持类型不变，用 RegSetValueExW 写入。
+   - 如果原值是 REG_SZ 但新值包含 %，提示用户是否转为可展开类型。
+   - 新增变量默认用 REG_SZ。
+
+5. 系统级写入前，调用 check_permission，通过尝试以 KEY_SET_VALUE 打开注册表键来判断，失败则返回 PermissionDenied。
+
+6. 写入成功后，必须广播 WM_SETTINGCHANGE 消息：
+   - 使用 SendMessageTimeoutW，参数 HWND_BROADCAST、WM_SETTINGCHANGE、0、L"Environment"
+   - 这样已运行的资源管理器才能感知变化。
+
+7. Path 变量的特殊处理：
+   - 读取时按 ; 分割成 Vec<PathEntry>，逐条检查 exists（用 std::path::Path::exists）。
+   - 检查 is_duplicate：忽略大小写比较。
+   - 写入时用 ; 重新拼接。
+
+8. backup 实现：将当前注册表键导出为 .reg 格式文本，存到 %APPDATA%\VarMan\backups\ 下，文件名带时间戳。
+
+
+请实现 src-tauri/src/platform/unix.rs，同时服务 Linux 和 macOS。
+
+核心逻辑是解析和改写 shell 配置文件。
+
+技术要求：
+
+1. 识别当前 shell：
+   - 读取环境变量 SHELL。
+   - macOS 默认 /bin/zsh，对应 ~/.zshrc。
+   - Linux 常见 /bin/bash，对应 ~/.bashrc。
+   - 如果检测到 ~/.zshrc 存在，优先用它。
+
+2. 用户级配置文件候选（按优先级）：
+   - macOS: ~/.zshrc, ~/.bash_profile, ~/.profile
+   - Linux: ~/.bashrc, ~/.profile
+   系统级：/etc/environment, /etc/profile
+
+3. 解析配置文件时：
+   - 逐行读取，用正则匹配 export VAR=value 和 VAR=value 两种写法。
+   - 记录每个变量的行号和原始文本。
+   - 忽略注释行（以 # 开头）和空行。
+
+4. 写入时：
+   - 如果变量已存在，替换对应行。
+   - 如果不存在，在文件末尾追加 export VAR="value"。
+   - 值中如果包含空格或特殊字符，用双引号包裹并转义内部双引号。
+   - 写入采用“读全量 → 改内存 → 写临时文件 → 原子重命名”的方式，避免写坏文件。
+
+5. 系统级写入前：
+   - 检查当前进程 euid 是否为 0（用 libc::geteuid）。
+   - 非 root 时返回 PermissionDenied，前端提示用户通过 pkexec 或 sudo 提权重试。
+
+6. Path 类变量：
+   - 在 Unix 下对应 PATH，按 : 分割。
+   - exists 用 std::path::Path::exists 检查。
+   - is_duplicate 直接字符串比较。
+
+7. backup 实现：
+   - 将原配置文件复制到 ~/.VarMan/backups/，文件名格式：{原文件名}.{时间戳}.bak
+
+
+请在 src-tauri/src/commands/ 下实现所有 Tauri command，供前端调用。
+
+要求：
+
+1. 每个 command 返回 Result<T, EnvError>，EnvError 实现 Serialize，前端能拿到结构化的错误对象，包含 code 和 message 字段。
+
+2. 需要的 command：
+   - list_env_vars(scope: Scope) -> Vec<EnvVar>
+   - get_env_var(name: String, scope: Scope) -> Option<EnvVar>
+   - preview_changes(changes: Vec<Change>) -> EnvDiff
+   - apply_changes(changes: Vec<Change>) -> EnvDiff
+   - remove_env_var(name: String, scope: Scope) -> EnvDiff
+   - check_permission(scope: Scope) -> bool
+   - create_backup(scope: Scope) -> String  // 返回备份文件路径
+   - list_backups() -> Vec<BackupInfo>
+   - restore_backup(path: String) -> ()
+   - parse_path_var(value: String) -> Vec<PathEntry>
+   - join_path_var(entries: Vec<PathEntry>) -> String
+
+3. apply_changes 内部流程：
+   - 先调 preview 生成 diff
+   - 检查权限
+   - 自动备份
+   - 逐条应用
+   - 返回实际 diff
+
+4. 所有涉及系统级操作的 command，如果权限不足，返回的错误 code 必须是 "PERMISSION_DENIED"，前端据此弹出提权引导。
+
+5. 在 lib.rs 中用 tauri::generate_handler! 注册所有 command。
+
+
+请用 React + TypeScript + Tailwind 实现前端界面。
+
+## 整体布局
+- 左侧边栏：作用域切换（用户变量 / 系统变量），底部显示当前平台和 shell 信息。
+- 主区域：变量列表表格。
+- 顶部工具栏：搜索框、新增按钮、备份/恢复入口。
+- 底部状态栏：显示最近一次操作结果和备份路径。
+
+## 变量列表
+- 表格列：变量名、值（超长截断，悬停展开）、来源（Unix 下显示配置文件路径）、操作。
+- 支持按名称搜索过滤。
+- Path 类变量（Windows 的 Path、Unix 的 PATH）在值列显示为 "N 个路径" 的可点击标签，点击打开专门的 Path 编辑器。
+
+## Path 编辑器（抽屉或模态框）
+- 列表展示每个路径条目。
+- 不存在的路径用红色标记，重复项用黄色标记。
+- 支持拖拽排序、逐条删除、手动添加。
+- 底部实时预览拼接后的完整值。
+
+## 编辑流程
+- 点击编辑 → 弹出表单 → 填写新值 → 点击保存 → 先调用 preview_changes 展示 diff 对比 → 用户确认 → 调用 apply_changes。
+- diff 视图用红绿配色展示新增、修改、删除的行。
+
+## 权限处理
+- 切换到系统变量时，先调用 check_permission。
+- 无权限时，列表只读，顶部显示黄色提示条，附带"以管理员身份重启"按钮。
+- Windows 下点击按钮调用 Tauri 的提权 API 重启进程；Unix 下提示用户用 sudo 重新启动。
+
+## 状态管理
+用 Zustand 管理：
+- currentScope
+- envVars: EnvVar[]
+- pendingChanges: Change[]
+- isLoading
+- lastError
+- backups: BackupInfo[]
+
+## 错误展示
+所有 EnvError 按 code 映射为中文提示，用 Toast 展示。
+
+请配置三平台的打包流程。
+
+要求：
+
+1. tauri.conf.json 中设置：
+   - productName: "VarMan"
+   - identifier: "com.yourname.VarMan"
+   - 图标使用 1024x1024 源图自动生成各尺寸。
+
+2. Windows：
+   - 打包为 .msi 和 .exe 两种格式。
+   - 在 manifest 中声明 requireAdministrator，使系统级操作无需二次提权。
+   - 但用户级操作不应强制提权，所以更推荐 asInvoker + 运行时按需提权。
+
+3. macOS：
+   - 打包为 .dmg。
+   - 需要在 Info.plist 中声明对 ~/.zshrc 等文件的访问权限说明。
+   - 考虑代码签名和公证（notarization）。
+
+4. Linux：
+   - 打包为 .deb 和 .AppImage。
+   - .deb 的 postinst 脚本中提示用户可将 VarMan 加入 PATH 管理白名单。
+
+5. 提供 GitHub Actions 工作流，在三个平台的 runner 上分别构建并上传 artifact。

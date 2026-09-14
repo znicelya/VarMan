@@ -1,0 +1,26 @@
+{
+  "bundle": {
+    "targets": ["dmg"],
+    "macOS": {
+      "minimumSystemVersion": "10.13",
+      "hardenedRuntime": true,
+      "infoPlist": "Info.plist",
+      "entitlements": "Entitlements.plist",
+      "dmg": {
+        "appPosition": {
+          "x": 180,
+          "y": 170
+        },
+        "applicationFolderPosition": {
+          "x": 480,
+          "y": 170
+        },
+        "windowSize": {
+          "width": 660,
+          "height": 400
+        }
+      }
+    }
+  }
+}
+

@@ -1,0 +1,132 @@
+{
+  "common": {
+    "cancel": "Cancel",
+    "close": "Close",
+    "user": "User",
+    "system": "System",
+    "writable": "Writable",
+    "readonly": "Read-only"
+  },
+  "sidebar": {
+    "tagline": "Environment Variable Manager",
+    "scopeNavLabel": "Environment variable scopes",
+    "userVariable": "User variables",
+    "userDescription": "Current user session",
+    "systemVariable": "System variables",
+    "systemDescription": "All user sessions",
+    "platform": "Platform: {{platform}}",
+    "shell": "Shell: {{shell}}",
+    "language": "Language"
+  },
+  "toolbar": {
+    "searchPlaceholder": "Search variable name",
+    "searchLabel": "Search variable name",
+    "refresh": "Refresh",
+    "backups": "Backups",
+    "add": "Add"
+  },
+  "table": {
+    "title": "Variables",
+    "loading": "Loading environment variables...",
+    "count_one": "{{count}} variable",
+    "count_other": "{{count}} variables",
+    "emptyTitle": "No matching variables",
+    "emptyDescription": "Adjust the search or add a new environment variable.",
+    "name": "Name",
+    "value": "Value",
+    "source": "Source",
+    "actions": "Actions",
+    "pathCount_one": "{{count}} path",
+    "pathCount_other": "{{count}} paths",
+    "registry": "Registry",
+    "shellConfig": "Shell config",
+    "editLabel": "Edit {{name}}",
+    "deleteLabel": "Delete {{name}}"
+  },
+  "dialog": {
+    "createTitle": "Add environment variable",
+    "editTitle": "Edit environment variable",
+    "previewHint": "Saving generates a change preview before writing.",
+    "nameLabel": "Name",
+    "valueLabel": "Value",
+    "nameRequired": "Variable name is required",
+    "keepExpandable": "Preserve environment variable references",
+    "expandableDescription": "Corresponds to REG_EXPAND_SZ on Windows; has no effect on Unix.",
+    "expandableHint": "Value contains % references. Enable the option above to expand them.",
+    "saveAndPreview": "Save & Preview",
+    "entries": "Entries",
+    "entryPlaceholder": "Enter a new entry",
+    "addEntry": "Add",
+    "browse": "Browse",
+    "choose": "Choose",
+    "directory": "Directory",
+    "file": "File",
+    "deleteEntry": "Delete {{entry}}",
+    "entryEmpty": "No entries"
+  },
+  "diff": {
+    "title": "Confirm changes",
+    "description": "A backup is created before writing; please confirm the differences.",
+    "empty": "No changes to write.",
+    "apply": "Confirm write",
+    "applying": "Writing...",
+    "before": "Before",
+    "after": "After",
+    "none": "(none)",
+    "badgeAdded": "Added",
+    "badgeRemoved": "Removed",
+    "badgeModified": "Modified"
+  },
+  "path": {
+    "title": "Path editor",
+    "description": "Drag to reorder; red means the directory is missing, yellow means duplicates.",
+    "placeholder": "Enter a new path",
+    "add": "Add",
+    "missing": "Missing",
+    "duplicate": "Duplicate",
+    "deleteLabel": "Delete {{path}}",
+    "empty": "No path entries",
+    "joined": "Joined result",
+    "emptyJoined": "(empty)",
+    "saveAndPreview": "Save & Preview"
+  },
+  "permission": {
+    "nonWindowsRestart": "Restart VarMan with sudo or pkexec",
+    "title": "System variables are read-only",
+    "windowsDesc": "The current process lacks permission to write system environment variables.",
+    "unixDesc": "The current process is not root, so system variables cannot be modified.",
+    "restartAsAdmin": "Restart as administrator"
+  },
+  "backup": {
+    "title": "Backups & restore",
+    "description": "Automatic backups before writes; a diff preview is shown before restore.",
+    "emptyTitle": "No backups yet",
+    "emptyDescription": "Create a backup to restore from here.",
+    "restore": "Restore",
+    "create": "Create backup for current scope"
+  },
+  "footer": {
+    "backupPrefix": "Backup:",
+    "variableCount_one": "{{count}} variable",
+    "variableCount_other": "{{count}} variables",
+    "backupCount_one": "{{count}} backup",
+    "backupCount_other": "{{count}} backups"
+  },
+  "errors": {
+    "PERMISSION_DENIED": "Permission denied, please elevate privileges and retry",
+    "NOT_FOUND": "Environment variable or file not found",
+    "PARSE_ERROR": "Configuration or request format error",
+    "IO_ERROR": "System read/write failed",
+    "UNSUPPORTED": "Unsupported on this platform",
+    "UNKNOWN": "An unknown error occurred"
+  },
+  "store": {
+    "appliedDiff": "Applied: {{added}} added, {{modified}} modified, {{removed}} removed",
+    "noOperation": "No operations yet",
+    "refreshListFailed": "Variables written, but failed to refresh the list",
+    "applied": "Environment variables applied",
+    "backupListFailed": "Backup created, but failed to refresh the backup list",
+    "backupCreated": "Backup created",
+    "backupRestored": "Backup restored"
+  }
+}

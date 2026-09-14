@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>NSUserShellConfigurationUsageDescription</key>
+  <string>VarMan 需要读取和修改 ~/.zshrc、~/.bash_profile、~/.profile 等 shell 配置文件，用于管理用户环境变量。</string>
+  <key>LSMinimumSystemVersion</key>
+  <string>10.13</string>
+</dict>
+</plist>
+

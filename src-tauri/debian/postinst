@@ -1,0 +1,12 @@
+#!/bin/sh
+set -e
+
+cat <<'EOF'
+VarMan 已安装。
+
+如需在 PATH 管理白名单中放行 VarMan，请管理员执行：
+  echo /usr/bin/varman >> /etc/varman/allowed-binaries
+
+EOF
+
+exit 0
